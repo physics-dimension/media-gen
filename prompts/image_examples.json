@@ -1,0 +1,62 @@
+[
+  {
+    "category": ["portrait", "fashion", "人像", "模特", "woman", "man", "person", "girl", "boy"],
+    "input": "时尚模特",
+    "output": "A striking fashion model wearing a tailored brown dress, sleek boots, and holding a structured handbag. Posing with a confident, statuesque stance, slightly turned. A seamless, deep cherry red studio backdrop. Medium-full shot, center-framed. Fashion magazine style editorial, shot on medium-format analog film, pronounced grain, high saturation, cinematic lighting effect."
+  },
+  {
+    "category": ["portrait", "close-up", "人物", "face", "emotion", "情绪"],
+    "input": "忧郁女孩",
+    "output": "Close-up with very shallow depth of field, a young woman's face looking out a bus window at passing city lights, her reflection faintly visible on the glass. Inside a bus at night during a rainstorm. Melancholic mood with cool blue tones, moody, cinematic. Shot on Fujifilm camera for authentic color science."
+  },
+  {
+    "category": ["landscape", "nature", "风景", "自然", "mountain", "sunset", "日落", "山"],
+    "input": "山间日出",
+    "output": "Golden hour aerial view of misty mountain peaks emerging from a sea of clouds, the first rays of sunlight painting the ridgeline in warm amber and rose. Deep shadows in the valleys below. Wide-angle drone shot, epic scale composition. Cinematic color grading with warm highlights and cool shadows, 4K clarity."
+  },
+  {
+    "category": ["landscape", "ocean", "sea", "海", "beach", "海滩"],
+    "input": "海边落日",
+    "output": "A lone surfer silhouetted against a molten orange sunset, standing ankle-deep in retreating surf on a vast empty beach. Long shadows stretch toward the camera. Wide shot, low angle emphasizing the dramatic sky. Golden hour backlighting creating lens flare, shot as if on 35mm film with warm saturated tones."
+  },
+  {
+    "category": ["product", "commercial", "产品", "商业", "beauty", "cosmetic", "化妆品"],
+    "input": "护肤品广告",
+    "output": "A high-end glossy commercial beauty shot of a sleek, minimalist nude-colored face moisturizer jar resting on a warm-toned marble surface. Soft, radiant three-point softbox lighting creates a gentle glow on the product surface. Shallow depth of field with creamy bokeh background. Clean, luxurious aesthetic, premium product photography."
+  },
+  {
+    "category": ["product", "food", "美食", "food photography", "餐饮"],
+    "input": "咖啡特写",
+    "output": "Extreme close-up of a barista's hands pouring steamed milk into a ceramic latte cup, creating a delicate rosetta pattern. Warm morning light streaming from a nearby window. Macro lens with f/2.8 shallow depth of field. Rich warm tones, the steam catching golden backlight. Cozy café atmosphere, shot on Fujifilm X-T5."
+  },
+  {
+    "category": ["architecture", "建筑", "city", "城市", "urban", "街道", "street"],
+    "input": "城市建筑",
+    "output": "A brutalist concrete apartment complex reflected perfectly in a rain-puddle on the pavement below, creating a symmetrical mirror composition. Overcast sky providing even, diffused lighting. Low-angle shot from ground level. Muted teal and grey color grading, cinematic 2.35:1 aspect ratio, urban documentary style."
+  },
+  {
+    "category": ["animal", "cat", "猫", "pet", "宠物", "dog", "狗"],
+    "input": "橘猫",
+    "output": "A fluffy orange tabby cat curled up on a sun-drenched windowsill, one paw draped lazily over the edge. Warm afternoon light creating a golden halo around its fur. Close-up shot with shallow depth of field, bokeh of green garden visible through the window. Soft, warm color palette, intimate and peaceful mood."
+  },
+  {
+    "category": ["sci-fi", "fantasy", "科幻", "奇幻", "space", "太空", "cyberpunk", "赛博朋克"],
+    "input": "赛博朋克街道",
+    "output": "A rain-soaked neon-lit alley in a cyberpunk megacity, holographic advertisements flickering on towering buildings. A lone figure in a dark trench coat walks away from camera, their silhouette reflected in wet pavement. Low angle tracking shot. Vibrant neon pink and electric blue color palette against deep shadows. Cinematic anamorphic lens flare, Blade Runner aesthetic."
+  },
+  {
+    "category": ["chinese", "中国风", "ink", "水墨", "traditional", "古风", "国画"],
+    "input": "水墨山水",
+    "output": "A serene Chinese ink wash landscape of layered mountain peaks dissolving into morning mist, a solitary pine tree clinging to a cliff edge in the foreground. A tiny scholar's pavilion nestled among the rocks. Traditional shan shui composition with generous negative space. Monochrome ink on rice paper texture, subtle grey gradients, contemplative and timeless atmosphere."
+  },
+  {
+    "category": ["abstract", "art", "艺术", "抽象", "creative", "创意"],
+    "input": "抽象流体艺术",
+    "output": "Swirling rivers of liquid gold and deep indigo paint meeting in a dramatic collision, creating intricate marble-like veins and cellular patterns. Extreme macro perspective revealing microscopic detail in the paint texture. High contrast between metallic gold highlights and velvety dark shadows. Studio lit from above, shot with macro lens at f/4."
+  },
+  {
+    "category": ["poster", "text", "海报", "typography", "文字", "design", "设计"],
+    "input": "音乐会海报",
+    "output": "A bold typographic concert poster with a solid midnight blue background. Large text 'MIDNIGHT' in an elegant condensed serif font fills the upper third, with 'JAZZ FESTIVAL' below in a lighter weight. A stylized golden saxophone silhouette emerges from the letters. Art deco geometric border frames the composition. Clean vector aesthetic with limited color palette of navy, gold, and cream."
+  }
+]

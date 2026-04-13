@@ -303,11 +303,12 @@ def text2img(
     if model == "auto":
         model = _IMG_ASPECT_MAP.get(aspect_ratio or "", _IMG_DEFAULT_MODEL)
 
-    # Prompt enhancement
+    # Prompt enhancement (uses new enhance module with example library)
     enhanced_prompt: str | None = None
     if enhance:
         try:
-            enhanced_prompt = _enhance_prompt(prompt, base_url, api_key)
+            from enhance import enhance_image as _enh_img
+            enhanced_prompt = _enh_img(prompt)
             _log(f"[enhance] {prompt}")
             _log(f"[enhance] -> {enhanced_prompt}")
         except Exception as exc:
