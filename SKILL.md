@@ -29,6 +29,9 @@ PYTHONUTF8=1 python $SKILL -p "cat playing in garden" --video
 
 # image-to-video
 PYTHONUTF8=1 python $SKILL -p "animate this scene" --ref photo.jpg --video
+
+# image-to-video (first + last frame interpolation)
+PYTHONUTF8=1 python $SKILL -p "smooth transition" --ref start.jpg --ref-last end.jpg --video
 ```
 
 ## Python API
@@ -47,8 +50,10 @@ from _core import text2img, img2img, text2video, img2video, batch_generate
 # text2video(prompt, *, model="auto", orientation="landscape", quality="fast",
 #            output_dir=None, stem=None, timeout=600) -> dict
 
-# img2video(prompt, reference_image, *, model="auto", orientation="landscape",
-#           quality="fast", output_dir=None, stem=None, timeout=600) -> dict
+# img2video(prompt, reference_image, *, last_frame=None, model="auto",
+#           orientation="landscape", quality="fast",
+#           output_dir=None, stem=None, timeout=600) -> dict
+# When last_frame is provided, runs first-last-frame interpolation.
 
 result = text2img("sunset over mountains", enhance=True, aspect_ratio="16:9")
 # result["saved_paths"], result["urls"], result["elapsed_ms"]
@@ -120,7 +125,8 @@ results = batch_generate([
 
 ```
 -p, --prompt       Description / instruction (required)
---ref              Reference image path/URL (img2img / img2video)
+--ref              Reference image path/URL (img2img / img2video first frame)
+--ref-last         Last-frame image for img2video (enables first-last-frame mode)
 --video            Video mode flag (text2video / img2video)
 -m, --model        Model override (default: auto)
 -a, --aspect-ratio Image aspect ratio: 16:9, 9:16, 1:1, 4:3, 3:4

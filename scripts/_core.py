@@ -88,6 +88,11 @@ _I2V_MODELS: dict[str, dict[str, str]] = {
     "lite":  {"landscape": "veo_3_1_i2v_lite_landscape",       "portrait": "veo_3_1_i2v_lite_portrait"},
 }
 
+# Dedicated first-last-frame lite models (flow2api requires 2 images exactly).
+_I2V_INTERP_MODELS: dict[str, dict[str, str]] = {
+    "lite":  {"landscape": "veo_3_1_interpolation_lite_landscape", "portrait": "veo_3_1_interpolation_lite_portrait"},
+}
+
 
 # ===========================================================================
 # Exception
@@ -481,6 +486,7 @@ def img2video(
     prompt: str,
     reference_image: str,
     *,
+    last_frame: str | None = None,
     model: str = "auto",
     orientation: str = "landscape",
     quality: str = "fast",
@@ -490,23 +496,36 @@ def img2video(
 ) -> dict:
     """Animate an image guided by a text prompt.
 
+    When *last_frame* is provided, flow2api runs first-last-frame
+    interpolation (both images guide the video); otherwise only the
+    first frame drives generation.
+
     Returns a dict with keys: type, model, prompt, reference_image,
-    orientation, quality, elapsed_ms, saved_path, url.
+    last_frame, orientation, quality, elapsed_ms, saved_path, url.
     """
     base_url, api_key = _resolve_config("VIDEO")
     out = pathlib.Path(output_dir) if output_dir else DEFAULT_VIDEO_DIR
 
     if model == "auto":
-        model = _resolve_video_model(_I2V_MODELS, quality, orientation)
+        if last_frame and quality in _I2V_INTERP_MODELS:
+            model = _resolve_video_model(_I2V_INTERP_MODELS, quality, orientation)
+        else:
+            model = _resolve_video_model(_I2V_MODELS, quality, orientation)
 
     img_b64 = _encode_image(reference_image)
-    user_content = [
+    user_content: list[dict] = [
         {
             "type": "image_url",
             "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"},
         },
-        {"type": "text", "text": prompt},
     ]
+    if last_frame:
+        last_b64 = _encode_image(last_frame)
+        user_content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{last_b64}"},
+        })
+    user_content.append({"type": "text", "text": prompt})
 
     payload = {
         "model": model,
@@ -536,6 +555,7 @@ def img2video(
         "model": model,
         "prompt": prompt,
         "reference_image": reference_image,
+        "last_frame": last_frame,
         "orientation": orientation,
         "quality": quality,
         "elapsed_ms": elapsed_ms,

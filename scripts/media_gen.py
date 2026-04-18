@@ -55,6 +55,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Reference image path or URL (triggers img2img / img2video)",
     )
     parser.add_argument(
+        "--ref-last",
+        default=None,
+        metavar="IMAGE",
+        help="Last-frame image for img2video (enables first-last frame mode)",
+    )
+    parser.add_argument(
         "--video",
         action="store_true",
         help="Video mode (triggers text2video / img2video)",
@@ -125,6 +131,8 @@ def main(argv: list[str] | None = None) -> None:
                 "orientation": args.orientation,
                 "quality": args.quality,
             }
+            if args.ref_last:
+                kwargs["last_frame"] = args.ref_last
             if args.output_dir:
                 kwargs["output_dir"] = pathlib.Path(args.output_dir)
             if args.stem:
