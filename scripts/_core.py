@@ -68,6 +68,18 @@ _IMG_ASPECT_MAP: dict[str, str] = {
 
 _IMG_DEFAULT_MODEL = "gemini-3.0-pro-image-landscape"
 
+# -- GPT image model auto-selection by aspect ratio (via CPA) ----------------
+
+_GPT_IMG_ASPECT_MAP: dict[str, str] = {
+    "16:9": "gpt-draw-1536x1024",
+    "9:16": "gpt-draw-1024x1536",
+    "1:1":  "gpt-draw-1024x1024",
+    "4:3":  "gpt-draw-1536x1024",
+    "3:4":  "gpt-draw-1024x1536",
+}
+
+_GPT_IMG_DEFAULT_MODEL = "gpt-draw-1024x1024"
+
 # -- Text-to-video model catalog (quality x orientation) --------------------
 
 _T2V_MODELS: dict[str, dict[str, str]] = {
@@ -289,6 +301,7 @@ def _check_video_bytes(data: bytes) -> None:
 def text2img(
     prompt: str,
     *,
+    provider: str = "auto",
     model: str = "auto",
     aspect_ratio: str | None = None,
     enhance: bool = False,
@@ -298,9 +311,21 @@ def text2img(
 ) -> dict:
     """Generate image(s) from a text prompt.
 
-    Returns a dict with keys: type, model, prompt, enhanced_prompt,
+    Args:
+        provider: "auto" (default Gemini), "gemini", or "gpt" (via CPA).
+
+    Returns a dict with keys: type, provider, model, prompt, enhanced_prompt,
     elapsed_ms, saved_paths, urls.
     """
+    if provider == "auto":
+        provider = "gemini"
+
+    if provider == "gpt":
+        return _text2img_gpt(
+            prompt, model=model, aspect_ratio=aspect_ratio, enhance=enhance,
+            output_dir=output_dir, stem=stem, timeout=timeout,
+        )
+
     base_url, api_key = _resolve_config("IMG")
     out = pathlib.Path(output_dir) if output_dir else DEFAULT_IMAGE_DIR
 
@@ -340,13 +365,14 @@ def text2img(
     urls = _extract_image_urls(content)
     if not urls:
         raise MediaGenError(f"No image URLs in response. Content: {content[:300]}")
-    _log(f"[text2img] {len(urls)} image(s) in {elapsed_ms}ms")
+    _log(f"[text2img:gemini] {len(urls)} image(s) in {elapsed_ms}ms")
 
     # Download & save
     saved_paths = _save_images(urls, out, stem or _safe_slug(prompt))
 
     return {
         "type": "text2img",
+        "provider": "gemini",
         "model": model,
         "prompt": prompt,
         "enhanced_prompt": enhanced_prompt,
@@ -354,6 +380,106 @@ def text2img(
         "saved_paths": saved_paths,
         "urls": urls,
     }
+
+
+# ===========================================================================
+# GPT provider: text2img via CPA
+# ===========================================================================
+
+def _text2img_gpt(
+    prompt: str,
+    *,
+    model: str = "auto",
+    aspect_ratio: str | None = None,
+    enhance: bool = False,
+    output_dir: str | pathlib.Path | None = None,
+    stem: str | None = None,
+    timeout: int = 240,
+) -> dict:
+    """Generate image via GPT (CPA cli-proxy-api). Returns base64 in message.images."""
+    base_url, api_key = _resolve_config("CPA")
+    out = pathlib.Path(output_dir) if output_dir else DEFAULT_IMAGE_DIR
+
+    if model == "auto":
+        model = _GPT_IMG_ASPECT_MAP.get(aspect_ratio or "", _GPT_IMG_DEFAULT_MODEL)
+
+    enhanced_prompt: str | None = None
+    if enhance:
+        try:
+            from enhance import enhance_image as _enh_img
+            enhanced_prompt = _enh_img(prompt)
+            _log(f"[enhance] {prompt}")
+            _log(f"[enhance] -> {enhanced_prompt}")
+        except Exception as exc:
+            _log(f"[enhance] failed ({exc}), using original prompt")
+
+    effective_prompt = enhanced_prompt or prompt
+
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": effective_prompt}],
+        "max_tokens": 4096,
+    }
+
+    _log(f"[text2img:gpt] model={model}")
+    t0 = time.time()
+    data = _api_call(base_url, api_key, payload, timeout=timeout)
+    elapsed_ms = int((time.time() - t0) * 1000)
+
+    # GPT/CPA returns images in message.images[] as data URIs
+    images = (
+        data.get("choices", [{}])[0]
+        .get("message", {})
+        .get("images", [])
+    )
+    if not images:
+        raise MediaGenError(
+            f"No images in GPT response. Keys: "
+            f"{list(data.get('choices', [{}])[0].get('message', {}).keys())}"
+        )
+
+    saved_paths = _save_images_from_base64(images, out, stem or _safe_slug(prompt))
+    _log(f"[text2img:gpt] {len(saved_paths)} image(s) in {elapsed_ms}ms")
+
+    return {
+        "type": "text2img",
+        "provider": "gpt",
+        "model": model,
+        "prompt": prompt,
+        "enhanced_prompt": enhanced_prompt,
+        "elapsed_ms": elapsed_ms,
+        "saved_paths": saved_paths,
+        "urls": [],
+    }
+
+
+def _save_images_from_base64(
+    images: list[dict],
+    output_dir: pathlib.Path,
+    slug: str,
+) -> list[str]:
+    """Decode base64 data-URI images and save to disk."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    saved: list[str] = []
+    for i, img in enumerate(images):
+        url = img.get("image_url", {}).get("url", "")
+        if not url.startswith("data:"):
+            continue
+        # data:image/png;base64,AAAA...
+        header, _, b64 = url.partition(",")
+        raw = base64.b64decode(b64)
+        _check_image_bytes(raw)
+        ext = "png"
+        if "jpeg" in header or "jpg" in header:
+            ext = "jpg"
+        elif "webp" in header:
+            ext = "webp"
+        suffix = f"_{i + 1}" if len(images) > 1 else ""
+        path = output_dir / f"{slug}{suffix}.{ext}"
+        path.write_bytes(raw)
+        saved.append(str(path))
+        _log(f"  saved {path} ({len(raw)} bytes)")
+    return saved
 
 
 # ===========================================================================

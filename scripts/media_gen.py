@@ -94,6 +94,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="LLM prompt enhancement (images only)",
     )
     parser.add_argument(
+        "--provider",
+        default="auto",
+        choices=["auto", "gemini", "gpt"],
+        help="Image provider: auto (Gemini), gemini, or gpt (via CPA)",
+    )
+    parser.add_argument(
         "-o", "--output-dir",
         default=None,
         help="Output directory",
@@ -176,6 +182,7 @@ def main(argv: list[str] | None = None) -> None:
             # text2img (default)
             kwargs = {
                 "prompt": args.prompt,
+                "provider": args.provider,
                 "model": args.model,
                 "aspect_ratio": args.aspect_ratio,
                 "enhance": args.enhance,

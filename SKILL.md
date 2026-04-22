@@ -2,9 +2,9 @@
 name: media-gen
 description: >
   AI media generation with 4 atomic capabilities: text-to-image, image-to-image,
-  text-to-video, image-to-video. Supports Gemini/Imagen image models and Veo 3.1
-  video models. Auto-selects model by aspect ratio/orientation, LLM prompt enhancement,
-  batch generation with concurrency=5. Image and video can use separate API channels.
+  text-to-video, image-to-video. Supports Gemini (via flow2api) and GPT (via CPA/Codex)
+  image providers, plus Veo 3.1 video models. Auto-selects model by aspect ratio,
+  LLM prompt enhancement, batch generation with concurrency=5.
   Use when user asks to generate images, create videos, draw, paint, animate,
   or produce any visual media content.
 ---
@@ -17,6 +17,9 @@ description: >
 
 ```bash
 SKILL=~/.claude/skills/media-gen/scripts/media_gen.py
+
+# text-to-image (GPT provider via CPA)
+PYTHONUTF8=1 python $SKILL -p "a red rose in morning light" --provider gpt
 
 # text-to-image
 PYTHONUTF8=1 python $SKILL -p "a red rose in morning light" --enhance
@@ -62,7 +65,9 @@ result = text2video("cinematic landscape", quality="ultra", orientation="landsca
 # result["saved_path"], result["url"]
 ```
 
-## Image Models (auto-selected by aspect ratio)
+## Image Providers
+
+### Gemini (default, via flow2api)
 
 | Aspect | Model |
 |--------|-------|
@@ -71,7 +76,16 @@ result = text2video("cinematic landscape", quality="ultra", orientation="landsca
 | 1:1    | gemini-3.0-pro-image-square |
 | 4:3    | gemini-3.0-pro-image-four-three |
 | 3:4    | gemini-3.0-pro-image-three-four |
-| default | gemini-3.0-pro-image-landscape |
+
+### GPT (via CPA/Codex, `--provider gpt`)
+
+| Aspect | Model |
+|--------|-------|
+| 16:9 / 4:3 | gpt-draw-1536x1024 |
+| 9:16 / 3:4 | gpt-draw-1024x1536 |
+| 1:1 (default) | gpt-draw-1024x1024 |
+
+GPT returns base64 PNG directly (no URL download needed).
 
 ## Video Models
 
@@ -133,6 +147,7 @@ results = batch_generate([
 --orientation      Video orientation: landscape, portrait (default: landscape)
 --quality          Video quality: fast, standard, lite, ultra, 4k, 1080p
 -e, --enhance      LLM prompt enhancement (images only)
+--provider         Image provider: auto (Gemini), gemini, gpt (via CPA)
 -o, --output-dir   Output directory
 -s, --stem         Filename stem
 -t, --timeout      Timeout in seconds
