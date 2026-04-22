@@ -14,10 +14,11 @@ Pure Python stdlib -- zero dependencies, no `pip install` required.
 ## Features
 
 - **4 atomic functions** -- each independently callable via CLI or Python API
+- **Multi-provider image generation** -- Gemini (via flow2api) and GPT (via CPA/Codex), selectable with `--provider`
 - **Auto model selection** -- picks the right model based on aspect ratio (images) or quality/orientation (videos)
 - **LLM prompt enhancement** -- optional rewrite of short prompts into detailed image prompts
 - **Batch generation** -- concurrent execution with configurable parallelism (default: 5 workers)
-- **Separate API channels** -- image and video generation can use different API endpoints
+- **Separate API channels** -- image, video, and GPT generation can use different API endpoints
 - **File validation** -- checks JPEG/PNG/WebP/MP4 magic bytes before saving
 - **OpenAI-compatible API** -- works with any provider exposing `/v1/chat/completions`
 
@@ -30,6 +31,9 @@ cp .env.example .env
 
 # Generate an image
 PYTHONUTF8=1 python scripts/media_gen.py -p "a red rose in morning light"
+
+# Generate with GPT provider (via CPA/Codex)
+PYTHONUTF8=1 python scripts/media_gen.py -p "a red rose in morning light" --provider gpt
 
 # Generate with prompt enhancement
 PYTHONUTF8=1 python scripts/media_gen.py -p "sunset" --enhance
@@ -77,7 +81,9 @@ results = batch_generate([
 
 ## Supported Models
 
-### Image Models (auto-selected by aspect ratio)
+### Image Providers
+
+#### Gemini (default, via flow2api)
 
 | Aspect Ratio | Model |
 |---|---|
@@ -86,6 +92,16 @@ results = batch_generate([
 | 1:1 | `gemini-3.0-pro-image-square` |
 | 4:3 | `gemini-3.0-pro-image-four-three` |
 | 3:4 | `gemini-3.0-pro-image-three-four` |
+
+#### GPT (via CPA/Codex, `--provider gpt`)
+
+| Aspect Ratio | Model |
+|---|---|
+| 16:9 / 4:3 | `gpt-draw-1536x1024` |
+| 9:16 / 3:4 | `gpt-draw-1024x1536` |
+| 1:1 (default) | `gpt-draw-1024x1024` |
+
+GPT provider returns base64 PNG images directly (no URL download step). Uses [CPA (cli-proxy-api)](https://github.com/router-for-me/CLIProxyAPI) as the backend.
 
 ### Video Models -- Text-to-Video
 
@@ -116,7 +132,7 @@ cp .env.example .env
 ```
 
 ```env
-# Image generation API
+# Image generation API (Gemini provider)
 IMG_BASE_URL=https://your-api-provider.com
 IMG_API_KEY=your-api-key
 
@@ -124,12 +140,16 @@ IMG_API_KEY=your-api-key
 VIDEO_BASE_URL=https://your-api-provider.com
 VIDEO_API_KEY=your-api-key
 
+# GPT image generation via CPA (cli-proxy-api)
+CPA_BASE_URL=http://your-cpa-server:8317
+CPA_API_KEY=your-cpa-api-key
+
 # Fallback (used when IMG_*/VIDEO_* not set)
 HUOSHAN2_BASE_URL=https://your-api-provider.com
 HUOSHAN2_API_KEY=your-api-key
 ```
 
-Image and video generation can use separate API endpoints. If `IMG_*` / `VIDEO_*` are not set, the `HUOSHAN2_*` values are used as fallback.
+Image and video generation can use separate API endpoints. GPT image generation uses the CPA channel. If `IMG_*` / `VIDEO_*` are not set, the `HUOSHAN2_*` values are used as fallback.
 
 ## CLI Reference
 
@@ -138,7 +158,8 @@ usage: media_gen [-h] -p PROMPT [--ref IMAGE] [--video] [-m MODEL]
                  [-a {16:9,9:16,1:1,4:3,3:4}]
                  [--orientation {landscape,portrait}]
                  [--quality {fast,standard,lite,ultra,4k,1080p}]
-                 [-e] [-o OUTPUT_DIR] [-s STEM] [-t TIMEOUT]
+                 [-e] [--provider {auto,gemini,gpt}]
+                 [-o OUTPUT_DIR] [-s STEM] [-t TIMEOUT]
 
 Options:
   -p, --prompt         Text prompt (required)
@@ -149,6 +170,7 @@ Options:
   --orientation        Video orientation (default: landscape)
   --quality            Video quality preset (default: fast)
   -e, --enhance        Enable LLM prompt enhancement (images only)
+  --provider           Image provider: auto (Gemini), gemini, gpt (via CPA)
   -o, --output-dir     Output directory
   -s, --stem           Output filename stem
   -t, --timeout        Request timeout in seconds
